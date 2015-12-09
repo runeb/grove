@@ -9,8 +9,21 @@ class RiverNotifications < ActiveRecord::Observer
     @river ||= Pebbles::River::River.new
   end
 
-  def after_create(object)
-    if object.is_a?(Post)
+  # ActiveRecord 4 specific method transaction_include_any_action?
+  #
+  # There is no way of specifying a condition on a hook in an observer, like:
+  # after_commit, on: :create
+  # So we need to check the transaction here in the observer
+  def is?(object, action)
+    if !object.respond_to?(:transaction_include_any_action?, true)
+      raise 'ActiveRecord 4 specific method \'transaction_include_any_action?\' not available, please fix'
+    end
+    object.send(:transaction_include_any_action?, [action])
+  end
+  private :is?
+
+  def after_commit(object)
+    if object.is_a?(Post) && is?(object, :create)
       prepare_for_publish(object, :create)
     end
   end

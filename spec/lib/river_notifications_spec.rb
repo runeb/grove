@@ -20,7 +20,8 @@ describe RiverNotifications do
         arg[:attributes]['version'].should eq 1
         arg[:changed_attributes].should be nil
       end
-      Post.create!(:canonical_path => 'this.that')
+      post = Post.create!(:canonical_path => 'this.that')
+      post.run_callbacks(:commit)
     end
 
   end
